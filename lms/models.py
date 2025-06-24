@@ -4,7 +4,7 @@ from django.db import models
 class Lesson(models.Model):
     title = models.CharField(max_length=250, verbose_name='Название')
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
-    preview = models.ImageField(upload_to='photos/courses', verbose_name='Превью')
+    preview = models.ImageField(upload_to='photos/lessons', blank=True, null=True, verbose_name='Превью')
     video_url = models.URLField(verbose_name='Ссылка на видео')
 
     class Meta:
