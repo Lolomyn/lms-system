@@ -1,0 +1,20 @@
+[
+  {
+    "model": "lms.course",
+    "pk": 1,
+    "fields": {
+      "title": "Python Course",
+      "preview": "photos/courses/test.jpg",
+      "description": "Python course for beginners"
+    }
+  },
+  {
+    "model": "lms.course",
+    "pk": 2,
+    "fields": {
+      "title": "Java Course",
+      "preview": "photos/courses/test.jpg",
+      "description": "Java course for beginners"
+    }
+  }
+]

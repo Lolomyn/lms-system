@@ -1,0 +1,90 @@
+[
+  {
+    "model": "lms.lesson",
+    "pk": 1,
+    "fields": {
+      "title": "Python base",
+      "description": "Основы языка программирования Python",
+      "preview": "photos/lessons/test.jpg",
+      "video_url": null,
+      "course": 1
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 2,
+    "fields": {
+      "title": "Python OOP",
+      "description": "Основы объектно ориентированного программирования",
+      "preview": "photos/lessons/test.jpg",
+      "video_url": null,
+      "course": 1
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 3,
+    "fields": {
+      "title": "Python Django",
+      "description": "Основы фреймворка Django",
+      "preview": "photos/lessons/test.jpg",
+      "video_url": null,
+      "course": 1
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 4,
+    "fields": {
+      "title": "Docker",
+      "description": "Основы контейнеризации на базе Docker",
+      "preview": "photos/lessons/test.jpg",
+      "video_url": null,
+      "course": 1
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 5,
+    "fields": {
+      "title": "Java base",
+      "description": "Основы языка программирования Java",
+      "preview": "photos/lessons/test.jpg",
+      "video_url": null,
+      "course": 2
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 6,
+    "fields": {
+      "title": "Java OOP",
+      "description": "Основы объектно ориентированного программирования",
+      "preview": "photos/lessons/test.jpg",
+      "video_url": null,
+      "course": 2
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 7,
+    "fields": {
+      "title": "Java Spring",
+      "description": "Основы фреймворка Spring",
+      "preview": "photos/lessons/test.jpg",
+      "video_url": null,
+      "course": 2
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 8,
+    "fields": {
+      "title": "Docker",
+      "description": "Основы контейнеризации на базе Docker",
+      "preview": "photos/lessons/test.jpg",
+      "video_url": null,
+      "course": 2
+    }
+  }
+]
