@@ -1,29 +1,29 @@
 from django.db import models
 
 
-class Lesson(models.Model):
+class Course(models.Model):
     title = models.CharField(max_length=250, verbose_name='Название')
+    preview = models.ImageField(upload_to='photos/courses', blank=True, null=True, verbose_name='Превью')
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
-    preview = models.ImageField(upload_to='photos/lessons', blank=True, null=True, verbose_name='Превью')
-    video_url = models.URLField(verbose_name='Ссылка на видео')
 
     class Meta:
-        verbose_name = 'Урок'
-        verbose_name_plural = 'Уроки'
+        verbose_name = 'Курс'
+        verbose_name_plural = 'Курсы'
 
     def __str__(self):
         return self.title
 
 
-class Course(models.Model):
+class Lesson(models.Model):
     title = models.CharField(max_length=250, verbose_name='Название')
-    preview = models.ImageField(upload_to='photos/courses', verbose_name='Превью')
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, verbose_name='Урок')
+    preview = models.ImageField(upload_to='photos/lessons', blank=True, null=True, verbose_name='Превью')
+    video_url = models.URLField(blank=True, null=True, verbose_name='Ссылка на видео')
+    course = models.ForeignKey(Course, related_name='lessons', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Урок')
 
     class Meta:
-        verbose_name = 'Курс'
-        verbose_name_plural = 'Курсы'
+        verbose_name = 'Урок'
+        verbose_name_plural = 'Уроки'
 
     def __str__(self):
         return self.title
