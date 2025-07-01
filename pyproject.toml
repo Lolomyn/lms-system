@@ -13,6 +13,7 @@ pillow = "^11.2.1"
 psycopg2-binary = "^2.9.10"
 dotenv = "^0.9.9"
 python-dotenv = "^1.1.0"
+django-filter = "^25.1"
 
 
 [build-system]
