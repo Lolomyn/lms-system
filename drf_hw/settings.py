@@ -17,7 +17,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.getenv('DEBUG') == 'True' else False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -78,8 +78,10 @@ DATABASES = {
     'default': {
         'ENGINE': os.getenv('ENGINE'),
         'NAME': os.getenv('NAME'),
-        'USER': os.getenv('USER'),
-        'PASSWORD': os.getenv('PASSWORD')
+        'USER': 'postgres',
+        'PASSWORD': os.getenv('PASSWORD'),
+        'HOST': 'localhost',
+        'PORT': '5433'
     }
 }
 

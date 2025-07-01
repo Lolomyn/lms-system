@@ -3,7 +3,7 @@
     "model": "users.payment",
     "pk": 1,
     "fields": {
-      "user": 2,
+      "user": 1,
       "payment_date": "2025-12-02",
       "payment_course": 1,
       "payment_sum": 10000,
@@ -14,7 +14,7 @@
     "model": "users.payment",
     "pk": 2,
     "fields": {
-      "user": 2,
+      "user": 1,
       "payment_date": "2025-10-02",
       "payment_course": 2,
       "payment_sum": 15000,
