@@ -12,7 +12,7 @@ from users.serializers import UserSerializer, PaymentSerializer, UserListSeriali
 class UserCreateAPIView(CreateAPIView):
     serializer_class = UserSerializer
     queryset = User.objects.all()
-    permission_classes = [AllowAny,]
+    permission_classes = [AllowAny, ]
 
     def perform_create(self, serializer):
         user = serializer.save(is_active=True)
@@ -20,29 +20,15 @@ class UserCreateAPIView(CreateAPIView):
         user.save()
 
 
-class UserListAPIView(ListAPIView):
-    serializer_class = UserListSerializer
-    queryset = User.objects.all()
-
-
-class UserUpdateAPIView(UpdateAPIView):
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-
-
-class UserRetrieveAPIView(RetrieveAPIView):
-    serializer_class = UserListSerializer
-    queryset = User.objects.all()
-
-
-class UserDestroyAPIView(DestroyAPIView):
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-
-
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
+    serializer_class_get = UserListSerializer
     queryset = User.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return self.serializer_class_get
+        return self.serializer_class
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
