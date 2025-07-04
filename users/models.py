@@ -8,8 +8,8 @@ class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True, verbose_name='Email')
 
-    phone = models.CharField(blank=True, verbose_name='Номер телефона', null=True, help_text='Введите номер телефона')
-    country = models.CharField(verbose_name='Страна')
+    phone = models.CharField(max_length=120, blank=True, verbose_name='Номер телефона', null=True, help_text='Введите номер телефона')
+    country = models.CharField(max_length=120, blank=True, null=True, verbose_name='Страна')
     avatar = models.ImageField(upload_to='users/avatars/', verbose_name='Аватар', blank=True, null=True,
                                help_text='Загрузите свой аватар')
 
@@ -34,7 +34,7 @@ class Payment(models.Model):
     payment_date = models.DateField(verbose_name='Дата оплаты')
     payment_course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Оплаченный курс')
     payment_sum = models.PositiveIntegerField(verbose_name='Сумма оплаты')
-    payment_method = models.CharField(choices=PAYMENT_CHOICES, default='remittance', verbose_name='Способ оплаты')
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='remittance', verbose_name='Способ оплаты')
 
     class Meta:
         verbose_name = 'Оплата'

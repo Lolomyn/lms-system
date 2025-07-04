@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from dotenv import load_dotenv
 import os
 
@@ -17,7 +19,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.getenv('DEBUG') == 'True' else False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -31,14 +33,17 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'django_filters',
+    'rest_framework_simplejwt',
     'users',
     'lms'
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': (
-        'django_filters.rest_framework.DjangoFilterBackend',
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated']
 }
 
 MIDDLEWARE = [
@@ -78,8 +83,10 @@ DATABASES = {
     'default': {
         'ENGINE': os.getenv('ENGINE'),
         'NAME': os.getenv('NAME'),
-        'USER': os.getenv('USER'),
-        'PASSWORD': os.getenv('PASSWORD')
+        'USER': 'postgres',
+        'PASSWORD': os.getenv('PASSWORD'),
+        'HOST': 'localhost',
+        'PORT': '5433'
     }
 }
 
@@ -126,3 +133,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1)
+}
