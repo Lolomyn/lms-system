@@ -7,7 +7,8 @@
       "description": "Основы языка программирования Python",
       "preview": "photos/lessons/test.jpg",
       "video_url": null,
-      "course": 1
+      "course": 1,
+      "owner": 1
     }
   },
   {
@@ -18,7 +19,8 @@
       "description": "Основы объектно ориентированного программирования",
       "preview": "photos/lessons/test.jpg",
       "video_url": null,
-      "course": 1
+      "course": 1,
+      "owner": 1
     }
   },
   {
@@ -29,7 +31,8 @@
       "description": "Основы фреймворка Django",
       "preview": "photos/lessons/test.jpg",
       "video_url": null,
-      "course": 1
+      "course": 1,
+      "owner": 1
     }
   },
   {
@@ -40,7 +43,8 @@
       "description": "Основы контейнеризации на базе Docker",
       "preview": "photos/lessons/test.jpg",
       "video_url": null,
-      "course": 1
+      "course": 1,
+      "owner": 1
     }
   },
   {
@@ -51,7 +55,8 @@
       "description": "Основы языка программирования Java",
       "preview": "photos/lessons/test.jpg",
       "video_url": null,
-      "course": 2
+      "course": 2,
+      "owner": 1
     }
   },
   {
@@ -62,7 +67,8 @@
       "description": "Основы объектно ориентированного программирования",
       "preview": "photos/lessons/test.jpg",
       "video_url": null,
-      "course": 2
+      "course": 2,
+      "owner": 1
     }
   },
   {
@@ -73,7 +79,8 @@
       "description": "Основы фреймворка Spring",
       "preview": "photos/lessons/test.jpg",
       "video_url": null,
-      "course": 2
+      "course": 2,
+      "owner": 1
     }
   },
   {
@@ -84,7 +91,8 @@
       "description": "Основы контейнеризации на базе Docker",
       "preview": "photos/lessons/test.jpg",
       "video_url": null,
-      "course": 2
+      "course": 2,
+      "owner": 1
     }
   }
 ]

@@ -5,7 +5,8 @@
     "fields": {
       "title": "Python Course",
       "preview": "photos/courses/test.jpg",
-      "description": "Python course for beginners"
+      "description": "Python course for beginners",
+      "owner": 1
     }
   },
   {
@@ -14,7 +15,8 @@
     "fields": {
       "title": "Java Course",
       "preview": "photos/courses/test.jpg",
-      "description": "Java course for beginners"
+      "description": "Java course for beginners",
+      "owner": 1
     }
   }
 ]

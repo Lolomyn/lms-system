@@ -41,7 +41,12 @@ class LessonCreateAPIView(generics.CreateAPIView):
 
 class LessonListAPIView(generics.ListAPIView):
     serializer_class = LessonSerializer
-    queryset = Lesson.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name='Moderators').exists():
+            return Lesson.objects.all()
+        return Lesson.objects.filter(owner=user)
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
