@@ -7,18 +7,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lms', '0002_alter_course_preview'),
+        ("lms", "0002_alter_course_preview"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='course',
-            name='lesson',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='lms.lesson', verbose_name='Урок'),
+            model_name="course",
+            name="lesson",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="lms.lesson",
+                verbose_name="Урок",
+            ),
         ),
         migrations.AlterField(
-            model_name='lesson',
-            name='video_url',
-            field=models.URLField(blank=True, null=True, verbose_name='Ссылка на видео'),
+            model_name="lesson",
+            name="video_url",
+            field=models.URLField(
+                blank=True, null=True, verbose_name="Ссылка на видео"
+            ),
         ),
     ]
