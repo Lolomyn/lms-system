@@ -146,6 +146,7 @@ class SubscriptionTestCase(APITestCase):
         self.course = Course.objects.create(id=1, title="Test", owner=self.user)
 
     def test_subscribe_to_course(self):
+        """Тестирование подписки на курс"""
         response = self.client.post("/subscription/", data={"course_id": 1})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -154,8 +155,13 @@ class SubscriptionTestCase(APITestCase):
         self.assertTrue(course_response.data["is_subscribed"])
 
     def test_unsubscribe_to_course(self):
-        response = self.client.post("/subscription/", data={"course_id": 1})  # подписался
-        response = self.client.post("/subscription/", data={"course_id": 1})  # отписался
+        """Тестирование отписки от курса"""
+        response = self.client.post(
+            "/subscription/", data={"course_id": 1}
+        )  # подписался
+        response = self.client.post(
+            "/subscription/", data={"course_id": 1}
+        )  # отписался
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         course_response = self.client.get(f"/courses/{self.course.id}/")
@@ -163,6 +169,7 @@ class SubscriptionTestCase(APITestCase):
         self.assertTrue(not course_response.data["is_subscribed"])
 
     def test_subscribe_to_course_no_auth(self):
+        """Тестирование подписки на курс без авторизации"""
         self.client.logout()
         response = self.client.post("/subscription/", data={"course_id": 1})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
