@@ -1,11 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User
+from .models import CustomUser
 
 
 class CustomUserAdmin(UserAdmin):
-    model = User
+    model = CustomUser
     list_display = ("id", "email", "phone", "country", "avatar")
     list_filter = ("email",)
     fieldsets = (
@@ -37,4 +37,4 @@ class CustomUserAdmin(UserAdmin):
     ordering = ("email",)
 
 
-admin.site.register(User, CustomUserAdmin)
+admin.site.register(CustomUser, CustomUserAdmin)

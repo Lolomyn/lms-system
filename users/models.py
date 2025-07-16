@@ -4,8 +4,7 @@ from django.db import models
 from lms.models import Course
 
 
-class User(AbstractUser):
-    username = None
+class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, verbose_name="Email")
 
     phone = models.CharField(
@@ -44,7 +43,7 @@ class Payment(models.Model):
     ]
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+        CustomUser, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
     payment_date = models.DateField(verbose_name="Дата оплаты")
     payment_course = models.ForeignKey(
