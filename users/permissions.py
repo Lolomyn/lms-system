@@ -1,13 +1,11 @@
 from rest_framework import permissions
 
-from users.models import User
-
 
 class IsModerator(permissions.BasePermission):
     """Проверяет, входит ли пользователь в группу Модераторов."""
 
     def has_permission(self, request, view):
-        return request.user.groups.filter(name='Moderators').exists()
+        return request.user.groups.filter(name="Moderators").exists()
 
 
 class IsOwner(permissions.BasePermission):
