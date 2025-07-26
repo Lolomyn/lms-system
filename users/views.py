@@ -1,17 +1,15 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
 from rest_framework.filters import OrderingFilter
-from rest_framework.generics import (
-    CreateAPIView,
-    DestroyAPIView,
-    ListAPIView,
-    RetrieveAPIView,
-    UpdateAPIView,
-)
+from rest_framework.generics import (CreateAPIView, DestroyAPIView,
+                                     ListAPIView, RetrieveAPIView,
+                                     UpdateAPIView)
 from rest_framework.permissions import AllowAny
 
-from users.models import CustomUser, Payment, CoursePayment
-from users.serializers import PaymentSerializer, UserListSerializer, UserSerializer, CoursePaymentSerializer
+from users.models import CoursePayment, CustomUser, Payment
+from users.serializers import (CoursePaymentSerializer, PaymentSerializer,
+                               UserListSerializer, UserSerializer)
+from users.services import create_stripe_price, create_stripe_session
 
 
 class UserCreateAPIView(CreateAPIView):
@@ -51,4 +49,12 @@ class CoursePaymentCreateAPIView(CreateAPIView):
     queryset = CoursePayment.objects.all()
 
     def perform_create(self, serializer):
-        pass
+        payment = serializer.save(user=self.request.user)
+
+        price = create_stripe_price(payment.amount, payment.course)
+        session_id, url = create_stripe_session(price)
+
+        payment.session_id = session_id
+        payment.link = url
+
+        payment.save()

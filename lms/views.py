@@ -14,6 +14,7 @@ class SubscriptionAPIView(APIView):
     Представление для подписки.
     Добавляет и удаляет подписку на курс.
     """
+
     def post(self, request, *args, **kwargs):
         user = request.user
         course_id = request.data.get("course_id")
@@ -36,6 +37,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     ViewSet для курсов.
     Реализация CRUD операций.
     """
+
     serializer_class = CourseSerializer
     queryset = Course.objects.all()
     pagination_class = CourseAndLessonPaginator
@@ -62,7 +64,8 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
-    """ Generic для создания урока. """
+    """Generic для создания урока."""
+
     serializer_class = LessonSerializer
 
     def perform_create(self, serializer):
@@ -77,7 +80,8 @@ class LessonCreateAPIView(generics.CreateAPIView):
 
 
 class LessonListAPIView(generics.ListAPIView):
-    """ Generic для просмотра уроков. """
+    """Generic для просмотра уроков."""
+
     serializer_class = LessonSerializer
     pagination_class = CourseAndLessonPaginator
 
@@ -89,7 +93,8 @@ class LessonListAPIView(generics.ListAPIView):
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
-    """ Generic для деталей по уроку. """
+    """Generic для деталей по уроку."""
+
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
 
@@ -100,7 +105,8 @@ class LessonRetrieveAPIView(generics.RetrieveAPIView):
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
-    """ Generic для обновления уроков. """
+    """Generic для обновления уроков."""
+
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
 
@@ -111,7 +117,8 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
-    """ Generic для удаления уроков. """
+    """Generic для удаления уроков."""
+
     queryset = Lesson.objects.all()
 
     def get_permissions(self):

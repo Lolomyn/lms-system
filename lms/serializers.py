@@ -14,7 +14,8 @@ class LessonSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    """ Сериализатор курсов. """
+    """Сериализатор курсов."""
+
     lessons = LessonSerializer(read_only=True, many=True)
     lesson_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()

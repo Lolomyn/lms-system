@@ -67,24 +67,17 @@ class Payment(models.Model):
 
 class CoursePayment(models.Model):
     session_id = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name='id сессии'
+        max_length=255, blank=True, null=True, verbose_name="id сессии"
     )
 
     # цена курса (продукта)
     amount = models.PositiveIntegerField(
-        blank=True,
-        null=True,
-        verbose_name='Стоимость курса'
+        blank=True, null=True, verbose_name="Стоимость курса"
     )
 
     # является продуктом
     course = models.ForeignKey(
-        Course,
-        on_delete=models.CASCADE,
-        verbose_name='Оплачиваемый курс'
+        Course, on_delete=models.CASCADE, verbose_name="Оплачиваемый курс"
     )
 
     # ссылка на оплату
@@ -92,7 +85,7 @@ class CoursePayment(models.Model):
         max_length=400,
         blank=True,
         null=True,
-        verbose_name='Ссылка на оплату',
+        verbose_name="Ссылка на оплату",
     )
 
     user = models.ForeignKey(
@@ -100,12 +93,12 @@ class CoursePayment(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Пользователь",
         blank=True,
-        null=True
+        null=True,
     )
 
     class Meta:
-        verbose_name = 'Оплата'
-        verbose_name_plural = 'Оплаты'
+        verbose_name = "Оплата"
+        verbose_name_plural = "Оплаты"
 
     def __str__(self):
         return f"{self.course} - {self.amount} руб. ({self.user.email})"
