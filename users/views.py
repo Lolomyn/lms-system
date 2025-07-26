@@ -10,8 +10,8 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import AllowAny
 
-from users.models import CustomUser, Payment
-from users.serializers import PaymentSerializer, UserListSerializer, UserSerializer
+from users.models import CustomUser, Payment, CoursePayment
+from users.serializers import PaymentSerializer, UserListSerializer, UserSerializer, CoursePaymentSerializer
 
 
 class UserCreateAPIView(CreateAPIView):
@@ -44,3 +44,11 @@ class PaymentViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_fields = ("payment_method", "payment_course")
     ordering_fields = ("payment_date",)
+
+
+class CoursePaymentCreateAPIView(CreateAPIView):
+    serializer_class = CoursePaymentSerializer
+    queryset = CoursePayment.objects.all()
+
+    def perform_create(self, serializer):
+        pass
