@@ -5,6 +5,7 @@ from lms.models import Course
 
 
 class CustomUser(AbstractUser):
+    username = None
     email = models.EmailField(unique=True, verbose_name="Email")
 
     phone = models.CharField(

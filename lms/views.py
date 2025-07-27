@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 
 from lms.models import Course, Lesson, Subscription
 from lms.paginators import CourseAndLessonPaginator
-from lms.serializers import CourseSerializer, LessonSerializer
+from lms.serializers import CourseSerializer, LessonSerializer, SubscriptionSerializer
+from lms.tasks import send_mail_to_subscriber
 from users.permissions import IsModerator, IsOwner
 
 
@@ -31,6 +32,13 @@ class SubscriptionAPIView(APIView):
 
         return Response({"message": message}, status=status.HTTP_200_OK)
 
+    def get(self, request, *args, **kwargs):
+        subscriptions = Subscription.objects.all()
+
+        serializer = SubscriptionSerializer(subscriptions, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     """
@@ -46,6 +54,12 @@ class CourseViewSet(viewsets.ModelViewSet):
         lesson = serializer.save()
         lesson.owner = self.request.user
         lesson.save()
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        send_mail_to_subscriber.delay(course_id=instance.id)
+
+        print(f"Обновлён объект {instance.id}")
 
     def get_permissions(self):
         if self.action == "create":
@@ -114,6 +128,12 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
         self.permission_classes = [IsModerator | IsOwner]
 
         return super().get_permissions()
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        send_mail_to_subscriber.delay(lesson_id=instance.id)
+
+        print(f"Обновлён объект {instance.id}")
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
