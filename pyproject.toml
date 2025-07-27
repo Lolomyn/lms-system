@@ -21,6 +21,7 @@ requests = "^2.32.4"
 stripe = "^12.3.0"
 celery = "^5.5.3"
 eventlet = "^0.40.2"
+django-celery-beat = "^2.8.1"
 
 
 [tool.poetry.group.lint.dependencies]
