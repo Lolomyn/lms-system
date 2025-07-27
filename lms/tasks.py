@@ -1,11 +1,16 @@
+from datetime import timedelta
+
 from celery import shared_task
 from django.core.mail import send_mail
+
+from users.models import CustomUser
 from .models import Subscription, Course, Lesson
+
+from django.utils import timezone
 
 
 @shared_task
 def send_mail_to_subscriber(course_id=None, lesson_id=None):
-
     # если изменился урок
     if lesson_id:
         lesson = Lesson.objects.select_related('course').get(id=lesson_id)
@@ -43,3 +48,16 @@ def send_mail_to_subscriber(course_id=None, lesson_id=None):
             from_email="vismanmark@yandex.ru",
             recipient_list=emails,
         )
+
+
+# Периодическая задача
+@shared_task
+def check_user_activity():
+    users = CustomUser.objects.all()
+    one_month_ago = timezone.now() - timedelta(days=30)
+
+    for user in users:
+        if user.last_login:
+            local_time_last_login = timezone.localtime(user.last_login)
+            if local_time_last_login < one_month_ago:
+                user.is_active = False

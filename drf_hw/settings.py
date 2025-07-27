@@ -124,7 +124,7 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
 
 # Часовой пояс для работы Celery
-CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE")
+CELERY_TIMEZONE = "Europe/Moscow"
 CELERY_ENABLE_UTC = False if os.getenv("CELERY_ENABLE_UTC") == "False" else True
 
 # Флаг отслеживания выполнения задач
