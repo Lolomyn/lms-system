@@ -5,6 +5,8 @@ from lms.validators import UrlValidator
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    """Сериализатор уроков."""
+
     class Meta:
         model = Lesson
         fields = "__all__"
@@ -12,6 +14,8 @@ class LessonSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    """Сериализатор курсов."""
+
     lessons = LessonSerializer(read_only=True, many=True)
     lesson_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
