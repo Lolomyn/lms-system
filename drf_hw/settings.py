@@ -123,6 +123,14 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
 # URL-адрес брокера результатов, также Redis
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
 
+# Настройки для Celery
+CELERY_BEAT_SCHEDULE = {
+    'task-name': {
+        'task': 'lms.tasks.check_user_activity',  # Путь к задаче
+        'schedule': timedelta(days=30),  # Расписание выполнения задачи (например, каждые 10 минут)
+    },
+}
+
 # Часовой пояс для работы Celery
 CELERY_TIMEZONE = "Europe/Moscow"
 CELERY_ENABLE_UTC = False if os.getenv("CELERY_ENABLE_UTC") == "False" else True
