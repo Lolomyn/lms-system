@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_celery_beat",
     "drf_yasg",
     "rest_framework",
     "django_filters",
@@ -115,3 +116,38 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = "users.CustomUser"
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
+
+# URL-адрес брокера сообщений
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+
+# URL-адрес брокера результатов, также Redis
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+
+# Настройки для Celery
+CELERY_BEAT_SCHEDULE = {
+    'task-name': {
+        'task': 'lms.tasks.check_user_activity',  # Путь к задаче
+        'schedule': timedelta(days=30),  # Расписание выполнения задачи (например, каждые 10 минут)
+    },
+}
+
+# Часовой пояс для работы Celery
+CELERY_TIMEZONE = "Europe/Moscow"
+CELERY_ENABLE_UTC = False if os.getenv("CELERY_ENABLE_UTC") == "False" else True
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = (
+    True if os.getenv("CELERY_TASK_TRACK_STARTED") == "True" else False
+)
+
+# Максимальное время на выполнение задачи
+CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT"))
+
+# Работа с почтой
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = True if os.getenv("EMAIL_USE_TLS") == "True" else False
+EMAIL_USE_SSL = True if os.getenv("EMAIL_USE_SSL") == "True" else False
