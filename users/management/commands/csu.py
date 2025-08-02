@@ -1,15 +1,18 @@
 from django.core.management import BaseCommand
-
-from users.models import CustomUser
+from django.contrib.auth import get_user_model
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        user = CustomUser.objects.create(email="admin@admin.com")
-        user.set_password("admin")
+        User = get_user_model()
+        email = "admin@admin.com"
 
-        user.is_active = True
-        user.is_staff = True
-        user.is_superuser = True
-
-        user.save()
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            user = User.objects.create(email=email)
+            user.set_password("admin")
+            user.is_active = True
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
