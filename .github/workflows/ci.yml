@@ -76,11 +76,20 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }} #
 
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
       - name: Deploy to server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
-          docker stop myapp || true
-          docker rm myapp || true
-          docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
-          EOF
+            ssh -tt -o StrictHostKeyChecking=no \
+                ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
+            docker stop myapp || true
+            docker rm myapp || true
+            docker run -d \
+                --name myapp \
+                -p 80:8000 \
+                -e SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+                ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
+            EOF
