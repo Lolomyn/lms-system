@@ -102,19 +102,21 @@ jobs:
       - name: Install Poetry and dependencies
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ secrets.DEPLOY_DIR }}
-          
-            # Установка Poetry
-            curl -sSL https://install.python-poetry.org | python3 -
-            export PATH="/home/$USER/.local/bin:$PATH"
-          
-            # Создание и активация venv
-            python3 -m venv venv --clear
+            cd /var/www/lms-system
+
+            # Очистка и пересоздание venv
+            rm -rf venv
+            python3 -m venv venv
             source venv/bin/activate
-          
-            # Установка зависимостей через Poetry
+
+            # Установка Poetry с явным указанием версии
+            curl -sSL https://install.python-poetry.org | python3 - --version 1.8.2
+            export PATH="/home/$USER/.local/bin:$PATH"
+
+            # Чистая установка зависимостей
             poetry config virtualenvs.create false
-            poetry install --only main --no-interaction --no-ansi
+            poetry cache clear --all pypi -n
+            poetry install --only main --no-interaction --no-ansi -vvv
           EOF
 
       - name: Apply migrations
