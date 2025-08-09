@@ -151,7 +151,7 @@ CELERY_TASK_TRACK_STARTED = (
 )
 
 # Максимальное время на выполнение задачи
-CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT"))
+CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", 1800))
 
 # Работа с почтой
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
