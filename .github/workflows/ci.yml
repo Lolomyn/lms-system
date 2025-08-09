@@ -49,95 +49,72 @@ jobs:
       - name: Run tests
         run: python manage.py test
 
-  #  build:
-  #    needs: test
-  #    runs-on: ubuntu-latest
-  #
-  #    steps:
-  #      - name: Checkout Code
-  #        uses: actions/checkout@v3
-  #
-  #      - name: Login to Docker Hub
-  #        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-  #
-  #      - name: Build Docker image
-  #        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }} .
-  #
-  #      - name: Push to Docker Hub
-  #        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
+#  build:
+#    needs: test
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v3
+#
+#      - name: Login to Docker Hub
+#        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+#
+#      - name: Build Docker image
+#        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }} .
+#
+#      - name: Push to Docker Hub
+#        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
 
   deploy:
-    needs: test
     runs-on: ubuntu-latest
+    needs: test
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Install Python on server (if needed)
+      - name: Ensure deploy directory exists
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            sudo apt-get update -qq &&
-            sudo apt-get install -y python3 python3-pip python3-venv
-          "
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "sudo mkdir -p ${{ secrets.DEPLOY_DIR }} && sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ env.DEPLOY_DIR }}"
 
-      - name: Prepare server directory
+      - name: Copy project files to server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            sudo mkdir -p ${{ secrets.DEPLOY_DIR }} &&
-            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ secrets.DEPLOY_DIR }}
-          "
+          rsync -avz --delete --exclude={'__pycache__','.git','venv'} -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ env.DEPLOY_DIR }}/
 
-      - name: Sync project files
-        run: |
-          rsync -avz --delete \
-            --exclude={'__pycache__','.git','venv','.env'} \
-            -e "ssh -o StrictHostKeyChecking=no" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}/
-
-      - name: Install Poetry and dependencies
+      - name: Install dependencies on server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
-          
-            # Установка Poetry
-            curl -sSL https://install.python-poetry.org | python3 -
-            export PATH="/home/$USER/.local/bin:$PATH"
-          
-            # Создание и активация venv
-            python3 -m venv venv --clear
+            python -m venv venv || true
             source venv/bin/activate
-          
-            # Установка зависимостей через Poetry
+            pip install --upgrade pip
+            pip install poetry
             poetry config virtualenvs.create false
-            poetry install --only main --no-interaction --no-ansi
+            poetry install --no-interaction --no-ansi --without dev
           EOF
 
       - name: Apply migrations
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            cd ${{ secrets.DEPLOY_DIR }}
-            source venv/bin/activate
-            python manage.py migrate --noinput
-          "
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+              cd ${{ secrets.DEPLOY_DIR }}
+              source venv/bin/activate
+              python manage.py migrate --noinput
+            EOF
 
       - name: Collect static files
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
             source venv/bin/activate
             python manage.py collectstatic --noinput --clear
-          "
+          EOF
 
       - name: Restart application
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            cd ${{ secrets.DEPLOY_DIR }}
-            sudo systemctl restart lms-system.service || 
-            (source venv/bin/activate && \
-             nohup gunicorn --workers 3 --bind 0.0.0.0:8000 drf_hw.wsgi:application > /dev/null 2>&1 &)
-          "
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "sudo systemctl restart myapp.service"
