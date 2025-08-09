@@ -92,6 +92,5 @@ jobs:
             docker run -d \
                 --name myapp \
                 -p 80:8000 \
-                -e SECRET_KEY="${{ secrets.SECRET_KEY }}" \
                 ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
             EOF
