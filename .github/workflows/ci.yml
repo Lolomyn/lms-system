@@ -78,19 +78,29 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Prepare server directory
+      - name: Test SSH connection
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            sudo mkdir -p ${{ env.DEPLOY_DIR }} &&
-            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ env.DEPLOY_DIR }}
+          ssh -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=10 \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
+              "echo 'SSH connection successful!'"
+
+      - name: Prepare server directory
+        timeout-minutes: 2
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=15 \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+            sudo mkdir -p /var/www/lms-system && \
+            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /var/www/lms-system
           "
 
-      - name: Sync project files
+      - name: Sync files
         run: |
-          rsync -avz --delete \
+          rsync -avz --progress \
             --exclude={'__pycache__','.git','venv','.env'} \
-            -e "ssh -o StrictHostKeyChecking=no" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ env.DEPLOY_DIR }}/
+            -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10" \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/var/www/lms-system/
 
       - name: Install dependencies
         run: |
