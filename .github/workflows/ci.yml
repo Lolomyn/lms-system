@@ -82,15 +82,9 @@ jobs:
 
       - name: Deploy to server
         run: |
-            ssh -tt -o StrictHostKeyChecking=no \
-                ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            sudo usermod -aG docker $USER
-            newgrp docker
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
-            docker stop myapp || true
-            docker rm myapp || true
-            docker run -d \
-                --name myapp \
-                -p 80:8000 \
-                ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
-            EOF
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
+          docker stop myapp || true
+          docker rm myapp || true
+          docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
+          EOF
