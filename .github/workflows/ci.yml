@@ -78,11 +78,16 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Prepare server environment
+      - name: Install Python on server (if needed)
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
             sudo apt-get update -qq &&
-            sudo apt-get install -y python3 python3-pip python3-venv &&
+            sudo apt-get install -y python3 python3-pip python3-venv
+          "
+
+      - name: Prepare server directory
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
             sudo mkdir -p ${{ secrets.DEPLOY_DIR }} &&
             sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ secrets.DEPLOY_DIR }}
           "
@@ -94,14 +99,22 @@ jobs:
             -e "ssh -o StrictHostKeyChecking=no" \
             ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}/
 
-      - name: Install dependencies on server
+      - name: Install Poetry and dependencies
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
+          
+            # Установка Poetry
+            curl -sSL https://install.python-poetry.org | python3 -
+            export PATH="/home/$USER/.local/bin:$PATH"
+          
+            # Создание и активация venv
             python3 -m venv venv --clear
             source venv/bin/activate
-            pip install --upgrade pip
-            pip install -r requirements.txt
+          
+            # Установка зависимостей через Poetry
+            poetry config virtualenvs.create false
+            poetry install --only main --no-interaction --no-ansi
           EOF
 
       - name: Apply migrations
@@ -125,6 +138,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
             cd ${{ secrets.DEPLOY_DIR }}
             sudo systemctl restart lms-system.service || 
-            (source venv/bin/activate && 
+            (source venv/bin/activate && \
              nohup gunicorn --workers 3 --bind 0.0.0.0:8000 drf_hw.wsgi:application > /dev/null 2>&1 &)
           "
