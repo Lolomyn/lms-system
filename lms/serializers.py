@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from lms.models import Course, Lesson, Subscription
-from lms.validators import UrlValidator
 
 
 class LessonSerializer(serializers.ModelSerializer):

@@ -18,7 +18,7 @@ jobs:
         run: pip install Poetry
 
       - name: Install flake8
-        run: poetry add --group lint flake8
+        run: poetry add --group dev flake8
 
       - name: Run flake8
         run: flake8 .
