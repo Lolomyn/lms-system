@@ -104,16 +104,13 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /var/www/lms-system
 
-            # Очистка и пересоздание venv
             rm -rf venv
             python3 -m venv venv
             source venv/bin/activate
 
-            # Установка Poetry с явным указанием версии
             curl -sSL https://install.python-poetry.org | python3 - --version 1.8.2
             export PATH="/home/$USER/.local/bin:$PATH"
 
-            # Чистая установка зависимостей
             poetry config virtualenvs.create false
             poetry cache clear --all pypi -n
             poetry install --only main --no-interaction --no-ansi -vvv
