@@ -49,76 +49,81 @@ jobs:
       - name: Run tests
         run: python manage.py test
 
-  build:
+#  build:
+#    needs: test
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v3
+#
+#      - name: Login to Docker Hub
+#        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+#
+#      - name: Build Docker image
+#        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }} .
+#
+#      - name: Push to Docker Hub
+#        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
+
+  deploy:
     needs: test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Login to Docker Hub
-        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }} .
-
-      - name: Push to Docker Hub
-        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
-
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Ensure deploy directory exists
+      - name: Prepare server directory
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            sudo mkdir -p /var/www/myapp &&
-            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /var/www/myapp
+            sudo mkdir -p ${{ env.DEPLOY_DIR }} &&
+            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ env.DEPLOY_DIR }}
           "
 
-      - name: Copy project files to server
+      - name: Sync project files
         run: |
-          rsync -avz --delete --exclude={'__pycache__','.git','venv'} -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/var/www/myapp/
+          rsync -avz --delete \
+            --exclude={'__pycache__','.git','venv','.env'} \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ env.DEPLOY_DIR }}/
 
-      - name: Install dependencies on server
+      - name: Install dependencies
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /var/www/myapp
-            python -m venv venv || true
+            cd ${{ env.DEPLOY_DIR }}
+            python -m venv venv --clear
             source venv/bin/activate
             pip install --upgrade pip
-            pip install poetry
-            poetry config virtualenvs.create false
-            poetry install --no-interaction --no-ansi --without dev
+            pip install -r requirements.txt
           EOF
 
       - name: Apply migrations
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /var/www/myapp
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+            cd ${{ env.DEPLOY_DIR }}
             source venv/bin/activate
             python manage.py migrate --noinput
-          EOF
+          "
 
       - name: Collect static files
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /var/www/myapp
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+            cd ${{ env.DEPLOY_DIR }}
             source venv/bin/activate
             python manage.py collectstatic --noinput --clear
-          EOF
+          "
 
       - name: Restart application
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "sudo systemctl restart myapp.service"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+            cd ${{ env.DEPLOY_DIR }}
+            sudo systemctl restart lms-system.service || 
+            (echo 'Trying to start manually' && 
+             source venv/bin/activate && 
+             nohup gunicorn --workers 3 --bind 0.0.0.0:8000 drf_hw.wsgi:application > /dev/null 2>&1 &)
+          "
