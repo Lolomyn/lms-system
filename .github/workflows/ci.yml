@@ -73,48 +73,48 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: SetUp Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Test SSH connection
+      - name: Install Python on server (if needed)
         run: |
-          ssh -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=10 \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
-              "echo 'SSH connection successful!'"
-
-      - name: Prepare server directory
-        timeout-minutes: 2
-        run: |
-          ssh -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=15 \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            sudo mkdir -p /var/www/lms-system && \
-            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /var/www/lms-system
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+            sudo apt-get update -qq &&
+            sudo apt-get install -y python3 python3-pip python3-venv
           "
 
-      - name: Sync files
+      - name: Prepare server directory
         run: |
-          rsync -avz --progress \
-            --exclude={'__pycache__','.git','venv','.env'} \
-            -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/var/www/lms-system/
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+            sudo mkdir -p ${{ env.DEPLOY_DIR }} &&
+            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ env.DEPLOY_DIR }}
+          "
 
-      - name: Install dependencies
+      - name: Sync project files
+        run: |
+          rsync -avz --delete \
+            --exclude={'__pycache__','.git','venv','.env'} \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ env.DEPLOY_DIR }}/
+
+      - name: Install Poetry and dependencies
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ env.DEPLOY_DIR }}
-            python -m venv venv --clear
+          
+            # Установка Poetry
+            curl -sSL https://install.python-poetry.org | python3 -
+            export PATH="/home/$USER/.local/bin:$PATH"
+          
+            # Создание и активация venv
+            python3 -m venv venv --clear
             source venv/bin/activate
-            pip install --upgrade pip
-            pip install -r requirements.txt
+          
+            # Установка зависимостей через Poetry
+            poetry config virtualenvs.create false
+            poetry install --only main --no-interaction --no-ansi
           EOF
 
       - name: Apply migrations
@@ -138,7 +138,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
             cd ${{ env.DEPLOY_DIR }}
             sudo systemctl restart lms-system.service || 
-            (echo 'Trying to start manually' && 
-             source venv/bin/activate && 
+            (source venv/bin/activate && \
              nohup gunicorn --workers 3 --bind 0.0.0.0:8000 drf_hw.wsgi:application > /dev/null 2>&1 &)
           "
