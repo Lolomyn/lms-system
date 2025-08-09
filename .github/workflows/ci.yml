@@ -89,7 +89,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
             sudo mkdir -p ${{ secrets.DEPLOY_DIR }} &&
-            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ env.DEPLOY_DIR }}
+            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ secrets.DEPLOY_DIR }}
           "
 
       - name: Sync project files
@@ -97,12 +97,12 @@ jobs:
           rsync -avz --delete \
             --exclude={'__pycache__','.git','venv','.env'} \
             -e "ssh -o StrictHostKeyChecking=no" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ env.DEPLOY_DIR }}/
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}/
 
       - name: Install Poetry and dependencies
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ env.DEPLOY_DIR }}
+            cd ${{ secrets.DEPLOY_DIR }}
           
             # Установка Poetry
             curl -sSL https://install.python-poetry.org | python3 -
@@ -120,7 +120,7 @@ jobs:
       - name: Apply migrations
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            cd ${{ env.DEPLOY_DIR }}
+            cd ${{ secrets.DEPLOY_DIR }}
             source venv/bin/activate
             python manage.py migrate --noinput
           "
@@ -128,7 +128,7 @@ jobs:
       - name: Collect static files
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            cd ${{ env.DEPLOY_DIR }}
+            cd ${{ secrets.DEPLOY_DIR }}
             source venv/bin/activate
             python manage.py collectstatic --noinput --clear
           "
@@ -136,7 +136,7 @@ jobs:
       - name: Restart application
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            cd ${{ env.DEPLOY_DIR }}
+            cd ${{ secrets.DEPLOY_DIR }}
             sudo systemctl restart lms-system.service || 
             (source venv/bin/activate && \
              nohup gunicorn --workers 3 --bind 0.0.0.0:8000 drf_hw.wsgi:application > /dev/null 2>&1 &)
