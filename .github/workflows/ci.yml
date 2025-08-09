@@ -67,8 +67,9 @@ jobs:
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
 
   deploy:
-    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     needs: build
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
@@ -81,16 +82,19 @@ jobs:
 
       - name: Ensure deploy directory exists
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "sudo mkdir -p ${{ env.DEPLOY_DIR }} && sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ env.DEPLOY_DIR }}"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+            sudo mkdir -p /var/www/myapp &&
+            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /var/www/myapp
+          "
 
       - name: Copy project files to server
         run: |
-          rsync -avz --delete --exclude={'__pycache__','.git','venv'} -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ env.DEPLOY_DIR }}/
+          rsync -avz --delete --exclude={'__pycache__','.git','venv'} -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/var/www/myapp/
 
       - name: Install dependencies on server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ env.DEPLOY_DIR }}
+            cd /var/www/myapp
             python -m venv venv || true
             source venv/bin/activate
             pip install --upgrade pip
@@ -101,16 +105,16 @@ jobs:
 
       - name: Apply migrations
         run: |
-            ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-              cd ${{ env.DEPLOY_DIR }}
-              source venv/bin/activate
-              python manage.py migrate --noinput
-            EOF
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /var/www/myapp
+            source venv/bin/activate
+            python manage.py migrate --noinput
+          EOF
 
       - name: Collect static files
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ env.DEPLOY_DIR }}
+            cd /var/www/myapp
             source venv/bin/activate
             python manage.py collectstatic --noinput --clear
           EOF
