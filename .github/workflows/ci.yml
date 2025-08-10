@@ -78,17 +78,7 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
-          rsync -avz --delete \
-            --exclude='.git/' \
-            --exclude='.venv/' \
-            --exclude='venv/' \
-            --exclude='.env' \
-            --exclude='__pycache__/' \
-            --exclude='htmlcov/' \
-            --exclude='media/' \
-            --exclude='redis_data/' \
-            --exclude='*.sqlite3' \
-            ./ $SSH_USER@$SERVER_IP:$DEPLOY_DIR/
+          rsync -avz ./ $SSH_USER@$SERVER_IP:$DEPLOY_DIR/
           
           ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "
             cd $DEPLOY_DIR
