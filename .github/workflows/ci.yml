@@ -82,22 +82,21 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
-            # Установка Poetry (если ещё не установлен)
             if ! command -v poetry &> /dev/null; then
-                curl -sSL https://install.python-poetry.org | python3 -
-                export PATH="$HOME/.local/bin:$PATH"
+                sudo apt-get update
+                sudo apt-get install -y python3-pip
+                sudo pip3 install poetry
             fi
-            # Установка зависимостей
-            poetry install --no-dev
+            export PATH="$HOME/.local/bin:$PATH"
+            poetry config virtualenvs.create true
+            poetry install --no-dev --no-root
           EOF
 
       - name: Apply migrations on server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
-            # Активация виртуального окружения Poetry
-            source $(poetry env info --path)/bin/activate
-            # Применение миграций
+            export PATH="$HOME/.local/bin:$PATH"
             poetry run python manage.py migrate --noinput
           EOF
 
@@ -105,9 +104,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
-            # Активация виртуального окружения Poetry
-            source $(poetry env info --path)/bin/activate
-            # Сбор статики
+            export PATH="$HOME/.local/bin:$PATH"
             poetry run python manage.py collectstatic --noinput
           EOF
 
