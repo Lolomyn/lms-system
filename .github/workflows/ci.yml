@@ -82,25 +82,33 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
+            # Установка Poetry (если ещё не установлен)
+            if ! command -v poetry &> /dev/null; then
+                curl -sSL https://install.python-poetry.org | python3 -
+                export PATH="$HOME/.local/bin:$PATH"
+            fi
+            # Установка зависимостей
+            poetry install --no-dev
           EOF
 
       - name: Apply migrations on server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
-            source venv/bin/activate
-            python manage.py migrate
+            # Активация виртуального окружения Poetry
+            source $(poetry env info --path)/bin/activate
+            # Применение миграций
+            poetry run python manage.py migrate --noinput
           EOF
 
       - name: Collect static files on server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
-            source venv/bin/activate
-            python manage.py collectstatic --noinput
+            # Активация виртуального окружения Poetry
+            source $(poetry env info --path)/bin/activate
+            # Сбор статики
+            poetry run python manage.py collectstatic --noinput
           EOF
 
       - name: Restart application
