@@ -65,45 +65,47 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-#    needs: test
 
     steps:
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.7.0
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.8.0
         with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
+          ssh-private-key: ${{ secrets.SSH_KEY }}  # Используем ваш SSH_KEY
 
-      - name: Copy project files to server
+      - name: Deploy via SSH
+        env:
+          SSH_HOST: ${{ secrets.SERVER_IP }}      # Ваш SERVER_IP
+          SSH_USER: ${{ secrets.SSH_USER }}        # Ваш SSH_USER
+          PROJECT_DIR: ${{ secrets.DEPLOY_DIR }}   # Ваш DEPLOY_DIR
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}  # Другие переменные...
         run: |
-          rsync -avz --exclude '__pycache__' . ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}
-
-      - name: Install dependencies on server
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ secrets.DEPLOY_DIR }}
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
-          EOF
-
-      - name: Apply migrations on server
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ secrets.DEPLOY_DIR }}
-            source venv/bin/activate
-            python manage.py migrate
-          EOF
-
-      - name: Collect static files on server
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ secrets.DEPLOY_DIR }}
-            source venv/bin/activate
-            python manage.py collectstatic --noinput
-          EOF
-
-      - name: Restart application
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            sudo systemctl restart myapp.service
-          EOF
+          # Копируем код на сервер (исключаем .git/, .env, __pycache__)
+          rsync -avz --delete \
+            --exclude='.git/' \
+            --exclude='.env' \
+            --exclude='__pycache__/' \
+            --exclude='.github/' \
+            ./ $SSH_USER@$SSH_HOST:$PROJECT_DIR/
+          
+          # Выполняем команды на сервере
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+            cd $PROJECT_DIR
+          
+            # Обновляем зависимости через Poetry
+            poetry install --no-dev
+          
+            # Применяем миграции (если нужно)
+            poetry run python manage.py migrate --noinput
+          
+            # Собираем статику (если используется)
+            poetry run python manage.py collectstatic --noinput || true
+          
+            # Перезапускаем Gunicorn (через systemd)
+            sudo systemctl restart gunicorn
+          
+            # Перезапускаем Nginx (если используется)
+            sudo systemctl restart nginx || true
+          "
