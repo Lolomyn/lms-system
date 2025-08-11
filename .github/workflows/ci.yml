@@ -23,30 +23,30 @@ jobs:
       - name: Run flake8
         run: poetry run flake8 .
 
-#  test:
-#    needs: lint
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Checkout Code
-#        uses: actions/checkout@v3
-#
-#      - name: SetUp Python
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: '3.12'
-#
-#      - name: Install dependencies
-#        run: |
-#          pip install --upgrade pip
-#          pip install poetry
-#          poetry config virtualenvs.create false
-#          poetry install --no-root
-#
-#      - name: Run tests
-#        env:
-#          SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
-#        run: python manage.py test
+  #  test:
+  #    needs: lint
+  #    runs-on: ubuntu-latest
+  #
+  #    steps:
+  #      - name: Checkout Code
+  #        uses: actions/checkout@v3
+  #
+  #      - name: SetUp Python
+  #        uses: actions/setup-python@v4
+  #        with:
+  #          python-version: '3.12'
+  #
+  #      - name: Install dependencies
+  #        run: |
+  #          pip install --upgrade pip
+  #          pip install poetry
+  #          poetry config virtualenvs.create false
+  #          poetry install --no-root
+  #
+  #      - name: Run tests
+  #        env:
+  #          SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
+  #        run: python manage.py test
 
   build:
     needs: lint
@@ -99,24 +99,11 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
             cd ${{ secrets.DEPLOY_DIR }}
-
-            # Перезапускаем только web-сервис для применения изменений
             sudo docker-compose up -d --no-deps --build web
-
-            # Применяем миграции
             sudo docker-compose exec web python manage.py migrate --noinput
-
-            # Перезагружаем Nginx
             sudo docker-compose exec nginx nginx -s reload
           EOF
 
-      - name: Verify deployment
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-            cd ${{ secrets.DEPLOY_DIR }}
-            sudo docker-compose ps
-            sudo docker-compose logs web --tail=20
-          "
 
 
 # Deploy через DockerHub
