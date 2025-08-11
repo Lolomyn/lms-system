@@ -83,10 +83,10 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
-            sudo python3 -m venv venv
+            python3 -m venv venv
             source venv/bin/activate
             sudo apt install python3-poetry
-            sudo poetry install --no-interaction --no-ansi
+            poetry install --no-interaction --no-ansi
           EOF
 
       - name: Apply migrations on server
@@ -94,7 +94,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
             source venv/bin/activate
-            sudo python manage.py migrate
+            python manage.py migrate
           EOF
 
       - name: Collect static files on server
@@ -102,7 +102,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
             source venv/bin/activate
-            sudo python manage.py collectstatic --noinput
+            python manage.py collectstatic --noinput
           EOF
 
       - name: Restart application
