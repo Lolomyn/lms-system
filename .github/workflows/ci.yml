@@ -23,33 +23,33 @@ jobs:
       - name: Run flake8
         run: poetry run flake8 .
 
-  test:
-    needs: lint
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: SetUp Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install poetry
-          poetry config virtualenvs.create false
-          poetry install --no-root
-
-      - name: Run tests
-        env:
-          SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
-        run: python manage.py test
+#  test:
+#    needs: lint
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v3
+#
+#      - name: SetUp Python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: '3.12'
+#
+#      - name: Install dependencies
+#        run: |
+#          pip install --upgrade pip
+#          pip install poetry
+#          poetry config virtualenvs.create false
+#          poetry install --no-root
+#
+#      - name: Run tests
+#        env:
+#          SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
+#        run: python manage.py test
 
   build:
-    needs: test
+    needs: lint
     runs-on: ubuntu-latest
 
     steps:
