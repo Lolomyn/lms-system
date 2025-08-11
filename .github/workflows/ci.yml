@@ -79,19 +79,26 @@ jobs:
         run: |
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude '__pycache__' . ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}
 
-      - name: Install dependencies on server
+      - name: Clean and install dependencies
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
             cd ${{ secrets.DEPLOY_DIR }}
-            if [ ! -d "venv" ]; then
-              python3 -m venv venv
-            fi
+            
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+            
+            rm -rf venv/
+
+            python3 -m venv venv
             source venv/bin/activate
+
             curl -sSL https://install.python-poetry.org | python3 -
             export PATH="$HOME/.local/bin:$PATH"
-            poetry config virtualenvs.in-project true
-            poetry install --no-interaction --no-ansi
+
+            poetry cache clear --all pypi -n
+
+            poetry install --no-interaction --no-ansi --no-root
           EOF
 
       - name: Apply migrations on server
