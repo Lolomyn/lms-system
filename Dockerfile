@@ -2,8 +2,6 @@ FROM python:3.12
 
 WORKDIR /app
 
-ENV SECRET_KEY=
-
 RUN apt-get update \
     && apt-get install -y gcc libpq-dev \
     && apt-get clean \
