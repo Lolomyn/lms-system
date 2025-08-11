@@ -67,7 +67,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    needs: build
 
     steps:
       - name: Checkout code
@@ -101,21 +101,21 @@ jobs:
             cd ${{ secrets.DEPLOY_DIR }}
 
             # Перезапускаем только web-сервис для применения изменений
-            docker-compose up -d --no-deps --build web
+            sudo docker-compose up -d --no-deps --build web
 
             # Применяем миграции
-            docker-compose exec web python manage.py migrate --noinput
+            sudo docker-compose exec web python manage.py migrate --noinput
 
             # Перезагружаем Nginx
-            docker-compose exec nginx nginx -s reload
+            sudo docker-compose exec nginx nginx -s reload
           EOF
 
       - name: Verify deployment
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
             cd ${{ secrets.DEPLOY_DIR }}
-            docker-compose ps
-            docker-compose logs web --tail=20
+            sudo docker-compose ps
+            sudo docker-compose logs web --tail=20
           "
 
 
