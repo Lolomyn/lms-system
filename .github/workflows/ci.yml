@@ -3,128 +3,128 @@ name: Django CI
 on: [ push, pull_request ]
 
 jobs:
-  #  lint:
-  #    runs-on: ubuntu-latest
-  #    steps:
-  #      - name: Checkout Code
-  #        uses: actions/checkout@v3
-  #
-  #      - name: SetUp Python
-  #        uses: actions/setup-python@v4
-  #        with:
-  #          python-version: '3.12'
-  #
-  #      - name: Install Poetry
-  #        run: pip install Poetry
-  #
-  #      - name: Install flake8
-  #        run: poetry add --group dev flake8
-  #
-  #      - name: Run flake8
-  #        run: poetry run flake8 .
-  #
-  #  test:
-  #    needs: lint
-  #    runs-on: ubuntu-latest
-  #
-  #    steps:
-  #      - name: Checkout Code
-  #        uses: actions/checkout@v3
-  #
-  #      - name: SetUp Python
-  #        uses: actions/setup-python@v4
-  #        with:
-  #          python-version: '3.12'
-  #
-  #      - name: Install dependencies
-  #        run: |
-  #          pip install --upgrade pip
-  #          pip install poetry
-  #          poetry config virtualenvs.create false
-  #          poetry install --no-root
-  #
-  #      - name: Run tests
-  #        run: python manage.py test
-
-  #  build:
-  #    needs: test
-  #    runs-on: ubuntu-latest
-  #
-  #    steps:
-  #      - name: Checkout Code
-  #        uses: actions/checkout@v3
-  #
-  #      - name: Login to Docker Hub
-  #        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-  #
-  #      - name: Build Docker image
-  #        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }} .
-  #
-  #      - name: Push to Docker Hub
-  #        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
-
-  deploy:
+  lint:
     runs-on: ubuntu-latest
-    environment: production
-
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.7.0
+      - name: SetUp Python
+        uses: actions/setup-python@v4
         with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: pip install Poetry
+
+      - name: Install flake8
+        run: poetry add --group dev flake8
+
+      - name: Run flake8
+        run: poetry run flake8 .
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: SetUp Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install poetry
+          poetry config virtualenvs.create false
+          poetry install --no-root
 
-      - name: Copy project files to server
-        run: |
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          rsync -avz --no-times --exclude '__pycache__' \
-            -e "ssh -o StrictHostKeyChecking=accept-new" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}/
+      - name: Run tests
+        run: python manage.py test
 
-      - name: Install dependencies on server
-        run: |
-          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ secrets.DEPLOY_DIR }}
-            poetry config virtualenvs.in-project true
-            poetry install
-            echo "Dependencies installed successfully"
-          EOF
+  build:
+    needs: test
+    runs-on: ubuntu-latest
 
-      - name: Apply migrations
-        run: |
-          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ secrets.DEPLOY_DIR }}
-            . .venv/bin/activate
-            poetry run python manage.py migrate
-            echo "Migrations applied successfully"
-          EOF
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Collect static files
-        run: |
-          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ secrets.DEPLOY_DIR }}
-            . .venv/bin/activate
-            poetry run python manage.py collectstatic --noinput
-            echo "Static files collected successfully"
-          EOF
+      - name: Login to Docker Hub
+        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
-      - name: Restart application
-        run: |
-          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            sudo systemctl restart myapp.service
-            sudo systemctl status myapp.service
-          EOF
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }} .
 
-      - name: Verify deployment
-        run: |
-          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ${{ secrets.DEPLOY_DIR }}
-            . .venv/bin/activate
-            poetry run python manage.py check
-          EOF
+      - name: Push to Docker Hub
+        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my_app:${{ github.sha }}
+
+#  deploy:
+#    runs-on: ubuntu-latest
+#    environment: production
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      - name: Set up SSH
+#        uses: webfactory/ssh-agent@v0.7.0
+#        with:
+#          ssh-private-key: ${{ secrets.SSH_KEY }}
+#
+#      - name: Install dependencies
+#        run: |
+#          pip install poetry
+#
+#      - name: Copy project files to server
+#        run: |
+#          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+#          rsync -avz --no-times --exclude '__pycache__' \
+#            -e "ssh -o StrictHostKeyChecking=accept-new" \
+#            ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}/
+#
+#      - name: Install dependencies on server
+#        run: |
+#          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+#            cd ${{ secrets.DEPLOY_DIR }}
+#            poetry config virtualenvs.in-project true
+#            poetry install
+#            echo "Dependencies installed successfully"
+#          EOF
+#
+#      - name: Apply migrations
+#        run: |
+#          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+#            cd ${{ secrets.DEPLOY_DIR }}
+#            . .venv/bin/activate
+#            poetry run python manage.py migrate
+#            echo "Migrations applied successfully"
+#          EOF
+#
+#      - name: Collect static files
+#        run: |
+#          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+#            cd ${{ secrets.DEPLOY_DIR }}
+#            . .venv/bin/activate
+#            poetry run python manage.py collectstatic --noinput
+#            echo "Static files collected successfully"
+#          EOF
+#
+#      - name: Restart application
+#        run: |
+#          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+#            sudo systemctl restart myapp.service
+#            sudo systemctl status myapp.service
+#          EOF
+#
+#      - name: Verify deployment
+#        run: |
+#          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+#            cd ${{ secrets.DEPLOY_DIR }}
+#            . .venv/bin/activate
+#            poetry run python manage.py check
+#          EOF
