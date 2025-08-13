@@ -1,7 +1,6 @@
 import stripe
 
 from drf_hw.settings import STRIPE_API_KEY
-from lms.models import Course
 
 stripe.api_key = STRIPE_API_KEY
 
